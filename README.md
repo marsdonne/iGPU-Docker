@@ -6,7 +6,6 @@ This project provides a Dockerfile to enable **AMD Radeon 780M** (based on the `
 
 ## Prerequisites
 
-* **Host System:** Ubuntu 22.04 LTS (Jammy Jellyfish).
 * **Docker:** A working Docker installation on your host system.
 * **AMDGPU Driver:** The corresponding AMDGPU kernel modules must be correctly installed and active on your host system for Docker containers to access `/dev/kfd` and `/dev/dri`.
 * **Local `rocm-pin.pref` file:** A file named `rocm-pin.pref` in the same directory as the Dockerfile with the following content:
@@ -56,3 +55,44 @@ Once you are inside the container's shell, you can verify the ROCm installation 
 
 If these commands correctly recognize your GPU and provide output, ROCm is successfully configured in your Docker container and ready for GPU-accelerated applications.
 
+### 4. Testing PyTorch with GPU Acceleration
+
+To test the GPU acceleration functionality with PyTorch, you can use the provided `Dockerfile.pytorch-test`. This Dockerfile builds on the `rocm-base` image and installs PyTorch with ROCm support.
+
+**Dockerfile:** `Dockerfile.pytorch`
+**Test script:** `test_gpu.py`
+
+1.  **Ensure `test_gpu.py` is present:**
+    Make sure the `test_gpu.py` script (provided earlier) is in the same directory as your `Dockerfile.pytorch`.
+
+2.  **Build the PyTorch test image:**
+    Navigate to your project directory in the terminal and build the image.
+    ```bash
+    docker build -f Dockerfile.pytorch -t rocm-pytorch-test:latest .
+    ```
+
+3.  **Run the PyTorch test container:**
+    Start the container, ensuring GPU devices and group permissions are passed through.
+    ```bash
+    docker run -it --rm \
+    --device=/dev/kfd \
+    --device=/dev/dri \
+    --group-add=$(getent group render | cut -d: -f3) \
+    --group-add=$(getent group video | cut -d: -f3) \
+    rocm-pytorch-test:latest
+    ```
+
+4.  **Verify the output:**
+    The container is configured to automatically run `test_gpu.py` upon startup. You should see output similar to this, confirming GPU availability and a successful computation:
+
+    ```
+    PyTorch Version: X.Y.Z+rocm...
+    Is CUDA (ROCm) available? True
+    Number of GPUs: 1
+    Current GPU: AMD Radeon Graphics (gfx1103)  # Or similar for your 780M
+
+    Successfully performed a matrix multiplication on the GPU.
+    Result shape: torch.Size([1000, 1000])
+    ```
+
+    If `Is CUDA (ROCm) available? False` or an error occurs, review your ROCm base image setup and Docker run commands.

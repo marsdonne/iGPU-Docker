@@ -1,0 +1,29 @@
+# Dockerfile.pytorch-test
+#
+# Builds upon the rocm-base image and adds PyTorch for testing.
+
+# Use the pre-built ROCm base image
+FROM rocm-igpu:latest
+
+# Install Python and Pip
+# apt update and clean are good practices even when using a base image,
+# as package lists might be outdated.
+RUN apt update && apt install -y python3 python3-pip \
+    && rm -rf /var/lib/apt/lists/* \
+    && apt clean
+
+# Install PyTorch with ROCm support
+# The exact URL for PyTorch wheels depends on the PyTorch and ROCm versions.
+# This example is typical for PyTorch 2.x with ROCm 6.x.
+# ALWAYS check the official PyTorch website (pytorch.org/get-started/locally/)
+# for the precise installation command matching your ROCm_VERSION in the base image.
+RUN pip3 install --no-cache-dir torch torchvision torchaudio --index-url https://download.pytorch.org/whl/nightly/rocm6.4/
+
+# Copy your GPU test script into the container
+# Make sure you have a 'test_gpu.py' file in the same directory as this Dockerfile.
+COPY test_gpu.py /app/test_gpu.py
+
+# Set the default command to run your test script when the container starts
+CMD ["python3", "/app/test_gpu.py"]
+# For manual testing and debugging, you might prefer:
+# CMD ["bash"]
