@@ -14,6 +14,9 @@ RUN apt update && apt install -y python3 python3-pip git \
     && rm -rf /var/lib/apt/lists/* \
     && apt clean
 
+# 使用清华pip源
+RUN pip config set global.index-url https://mirrors.tuna.tsinghua.edu.cn/pypi/web/simple
+
 # Install PyTorch with ROCm support
 # The exact URL for PyTorch wheels depends on the PyTorch and ROCm versions.
 # This example is typical for PyTorch 2.x with ROCm 6.x.
